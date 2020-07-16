@@ -1,0 +1,35 @@
+# This file will provide the user's inputs to the report as well as the parameters.
+# All of the following are required in the report.
+
+cover_page_path: "proj_cover_page.png"
+
+
+# Write-up on model description
+# - Brief description about the model highlighting the business contents\n"
+# - What kind of model (Rule, Supervised or Unsupervised Learning)\n"
+# - Input variables and target variables
+model_description: |
+  This is a supervised classification task ...
+
+
+# Write-up on explainability findings
+explainability: |
+  [placeholder]
+
+
+# Write-up on conclusion
+conclusion:
+  model_performance: |
+    [placeholder]
+  explainability: |
+    [placeholder]
+
+
+# Configuration for number of top features to show
+num_top_features: 5
+
+
+# Configuration for fairness
+fairness_threshold: 0.2
+fairness_metrics: ["Equal opportunity", "Predictive parity"]
+# ["Equal opportunity", "Predictive parity", "Statistical parity", "Predictive equality", "Equalized odd", "Conditional use accuracy equality"]

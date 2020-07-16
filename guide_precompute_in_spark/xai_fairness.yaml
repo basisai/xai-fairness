@@ -1,0 +1,36 @@
+# This file will provide the user's inputs to the report as well as the parameters.
+# All of the following are required in the report.
+
+cover_page_path: "proj_cover_page.png"
+
+
+# Write-up on model description
+# - Brief description about the model highlighting the business contents\n"
+# - What kind of model (Rule, Supervised or Unsupervised Learning)\n"
+# - Input variables and target variables
+model_description: |
+  This is a supervised classification task for credit default risk model. The objective is to use historical loan application data to predict whether or not an applicant will be able to repay a loan. The target is a 0 for the loan was repaid on time, or a 1 indicating the client had payment difficulties. There are over 750 features/input variables that includes CODE_GENDER, FLAG_OWN_CAR, AMT_INCOME_TOTAL, AMT_CREDIT, NAME_EDUCATION_TYPE, OCCUPATION_TYPE and NAME_HOUSING_TYPE.
+
+
+# Write-up on explainability findings
+explainability: |
+  EXT_SOURCE_2, EXT_SOURCE_3, EXT_SOURCE_1 are scores derived from past records of the client transactions with our bank. Thus, they are important predictors, which are correctly reflected in the feature importance plots.
+
+
+# Write-up on conclusion
+conclusion:
+  model_performance: |
+    As the precision and recall values are above 70%, the model is considered performing well.
+  explainability: |
+    Having reviewed the plots in Section 4, we have assessed that the prohibited features do not contribute significantly to the model performance. The direction of the feature impact is also as expected. We are confident that if asked to explain the key factors in the model, a clear explanation can be given to stakeholders and customers.
+
+
+# Configuration for number of top features to show
+num_top_features: 5
+
+
+# Configuration for fairness
+fairness_threshold: 0.2
+fairness_metrics: ["Equal opportunity", "Predictive parity"]
+# ["Equal opportunity", "Predictive parity", "Statistical parity", "Predictive equality", "Equalized odd", "Conditional use accuracy equality"]
+
