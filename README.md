@@ -1,6 +1,33 @@
 # xai-fairness
 Toolkit for model explainability and fairness
 
+## Notes Before Starting
+The report generator need to perform precomputation of Shapley values first, and this is the most compute-intensive. The user can choose
+- to let the report generator take care of the precomputation, or
+- to precompute outside the report generator.
+
+For PySpark tree models only,
+- to let the report generator take care of the precomputation: please refer to [eg_spark_tree_model](https://github.com/basisai/xai-fairness/tree/dev/eg_spark_tree_model).
+- to precompute in Python: you can refer to [guides/precompute_in_python](https://github.com/basisai/xai-fairness/blob/dev/guides/precompute_in_python.ipynb). You can also use this to gauge how long the report generator would run, since this is most compute-intensive part.
+- unfortunately, precomputing in Spark is not possible since PySpark models are not serializable.
+
+For other PySpark models (logistic and linear regression, neural networks)
+- please port over the coefficients to their Python counterparts and then follow the instructions for serializable models below. Refer to [guides/convert_spark_model_python](https://github.com/basisai/xai-fairness/blob/dev/guides/convert_spark_model_python.ipynb) to see how to convert trained `pyspark.ml.classification.LinearRegression` model to `sklearn.linear_model.LinearRegression` model.
+
+For serializable models,
+- to precompute in Spark: please refer to [guide_precompute_in_spark](https://github.com/basisai/xai-fairness/tree/dev/guide_precompute_in_spark).
+- to precompute in Python: you can refer to [guides/precompute_in_python](https://github.com/basisai/xai-fairness/blob/dev/guides/precompute_in_python.ipynb).
+- to let the report generator take care of the precomputation: refer to 
+  - [binary classification](https://github.com/basisai/xai-fairness/tree/dev/eg_binary_class)
+  - [multiclass classification](https://github.com/basisai/xai-fairness/tree/dev/eg_multiclass)
+  - [regression](https://github.com/basisai/xai-fairness/tree/dev/eg_regression)
+  - [complex model with composite models](https://github.com/basisai/xai-fairness/tree/dev/eg_multilayer_model)
+
+Note that
+1. To let the report generator take care of the precomputation, you will supply validation features `x_valid` for `xai_data` input. Since precomputation is done in the report generator, it will take time to run.
+2. To precompute (either in Spark or Python), you will supply `shap_summary_dfs` and `shap_sample_dfs` for `xai_data` input instead. The report generator should take a relatively much shorter amount of time to run.
+
+
 ## Getting started
 There are 4 files that require user inputs.
 - `cover_page.png`
@@ -37,7 +64,7 @@ To get started, refer to `sample_template`. Refer to `eg_*` for examples on
   - `model_perf_to_print`: This is used to print the model performance in the format that the user wishes to show.
 
 - Data should be in `pandas.DataFrame` for features, and array-like for labels.
-  1. The data for `xai_data` must be in the same format as the training data. It will be used to compute Shapley values. Thus, this data should be a good representation of the data in order not to bias the interpretation of the model. It is also used for plotting purposes, and so it suffices to be a sample of 1000-10000s. **The user can also use `guide_precompute_in_spark` to precompute `xai_data` in Spark. In this case, the user only needs to input the data generated from the codes in the guide.**
+  1. The data `x_valid` for `xai_data` input must be in the same format as the training data. It will be used to compute Shapley values. Thus, this data should be a good representation of the data in order not to bias the interpretation of the model. It is also used for plotting purposes, and so it suffices to be a sample of 1000-10000s. **The user can also precompute and supply `shap_summary_dfs` and `shap_sample_dfs` for `xai_data` input instead of providing `x_valid`. See Notes above.**
   2. The data for `indiv_xai_data` should be a dict of (label, individual data points in `pandas.DataFrame` in the same format as the training data).
   3. The data required by `fai_data` consists of three parts:
     - a `pandas.DataFrame` of the sensitive attribute columns, which need not be part of the training data. They are only used to split the populations into privileged and unprivileged groups.
@@ -77,6 +104,6 @@ To save the report as a PDF, just print the report as PDF.
 
 ## Guides
 Include miscellaneous guides
-- To compute Shapley values at scale in PySpark: `scaling_shap.ipynb`
+- To compute Shapley values in Spark: `scaling_shap.ipynb`
 - To convert trained `pyspark.ml.classification.LinearRegression` model to `sklearn.linear_model.LinearRegression` model: `convert_spark_model_python.ipynb`
 
