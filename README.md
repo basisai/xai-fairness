@@ -67,9 +67,11 @@ To get started, refer to `sample_template`. Refer to `eg_*` for examples on
   1. The data `x_valid` for `xai_data` input must be in the same format as the training data. It will be used to compute Shapley values. Thus, this data should be a good representation of the data in order not to bias the interpretation of the model. It is also used for plotting purposes, and so it suffices to be a sample of 1000-10000s. **The user can also precompute and supply `shap_summary_dfs` and `shap_sample_dfs` for `xai_data` input instead of providing `x_valid`. See Notes above.**
   2. The data for `indiv_xai_data` should be a dict of (label, individual data points in `pandas.DataFrame` in the same format as the training data).
   3. The data required by `fai_data` consists of three parts:
-    - a `pandas.DataFrame` of the sensitive attribute columns, which need not be part of the training data. They are only used to split the populations into privileged and unprivileged groups.
+    - a `pandas.DataFrame` of the sensitive attribute columns, which need not be part of the training data. They are only used to split the populations into privileged and unprivileged groups. **Thus, they must not contain NaNs nor values that are not specified in `CONFIG_FAI`.**
     - array-like of true classes
     - array-like of predicted classes
+
+> Protip: Ensure that the data must **not** be of dtype `object` or `str`, especially when converting from PySpark dataframe to pandas dataframe.
 
 - For multilayer models, the user will have to set `predict_func` instead of `model`. In this case, background data will also be required.
   - This is the input to the KernelExplainer.
