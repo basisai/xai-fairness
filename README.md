@@ -71,7 +71,7 @@ To get started, refer to `sample_template`. Refer to `eg_*` for examples on
     - array-like of true classes
     - array-like of predicted classes
 
-> Protip: Ensure that the data must **not** be of dtype `object` or `str`, especially when converting from PySpark dataframe to pandas dataframe. Verify using `<df>.dtypes` or `<df>.info()`.
+> Protip: Ensure that the data must **not** be of dtype `object` or `str`, especially after converting from PySpark dataframe to pandas dataframe. Verify using `<df>.dtypes` or `<df>.info()`. Checking your data beforehand will avoid unexpected results and unnecessary errors.
 
 - For multilayer models, the user will have to set `predict_func` instead of `model`. In this case, background data will also be required.
   - This is the input to the KernelExplainer.
