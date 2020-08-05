@@ -22,7 +22,7 @@ from util import page_break, add_header
 
 
 class ReportPreparer:
-    def __init__(self, config, config_fai, feature_names):
+    def __init__(self, config, config_fai=None, feature_names=None):
         """
         Configurations for the report.
 
@@ -47,6 +47,11 @@ class ReportPreparer:
         self.true_class = None
         self.pred_class = None
         self.max_rows = 3000
+
+        if config_fai is not None:
+            self.has_fai = bool(config_fai.keys())
+        else:
+            self.has_fai = False
 
     def model_artefact(self, model_type=None, model=None, predict_func=None, bkgrd_data=None):
         """
@@ -91,7 +96,7 @@ class ReportPreparer:
         self.indiv_samples = indiv_samples
         return self
 
-    def fai_data(self, valid_fai, true_class, pred_class):
+    def fai_data(self, valid_fai=None, true_class=None, pred_class=None):
         """
         To be used for fairness
         The classes need not correspond to the original target variable.
@@ -119,6 +124,9 @@ class ReportPreparer:
         return self
 
     def check_data(self):
+        if self.feature_names is None:
+            raise AttributeError("Missing feature_names input.")
+
         if self.x_valid is None and (self.shap_summary_dfs is None or self.shap_sample_dfs is None):
             raise AttributeError("'xai_data' is missing either shap_summary_dfs or shap_sample_dfs.")
 
@@ -137,7 +145,7 @@ class ReportPreparer:
         if self.predict_func is not None and self.bkgrd_data is None:
             raise AttributeError("'bkgrd_features' is missing. Required for use with 'predict_func'")
 
-        if self.valid_fai is None:
+        if self.valid_fai is None and self.has_fai:
             raise AttributeError("Data for fairness is missing")
 
         if self.text_model_perf is None:
@@ -219,6 +227,7 @@ def generate_report(report_inputs):
     """Generate report."""
     config = report_inputs.config
     config_fai = report_inputs.config_fai
+    has_fai = report_inputs.has_fai
 
     report_inputs.check_data()
 
@@ -281,15 +290,16 @@ def generate_report(report_inputs):
         x_valid = report_inputs.shap_sample_dfs[0]
         all_shap_values = report_inputs.shap_sample_dfs[1:]
 
-    valid_fai = report_inputs.valid_fai
-    true_class = report_inputs.true_class
-    pred_class = report_inputs.pred_class
+    if has_fai:
+        valid_fai = report_inputs.valid_fai
+        true_class = report_inputs.true_class
+        pred_class = report_inputs.pred_class
 
-    # Get unique fairness classes
-    unq_fai_classes = np.unique(true_class)
-    # If there are 2 classes, select the latter
-    if len(unq_fai_classes) == 2:
-        unq_fai_classes = unq_fai_classes[1:]
+        # Get unique fairness classes
+        unq_fai_classes = np.unique(true_class)
+        # If there are 2 classes, select the latter
+        if len(unq_fai_classes) == 2:
+            unq_fai_classes = unq_fai_classes[1:]
 
     cover_page_path = config["cover_page_path"] or "../report_style/dbs/assets/cover_full.png"
     add_header(cover_page_path)
@@ -304,8 +314,12 @@ def generate_report(report_inputs):
     st.write("religion, nationality, birth place, gender, race")
 
     st.header("III. Algorithmic Fairness")
-    final_fairness = alg_fai_summary(valid_fai, unq_fai_classes, true_class, pred_class,
-                                     config_fai, config)
+    if has_fai:
+        st.header("III. Algorithmic Fairness")
+        final_fairness = alg_fai_summary(valid_fai, unq_fai_classes, true_class, pred_class,
+                                         config_fai, config)
+    else:
+        st.write("No prohibited variables found. No fairness metrics computed.")
 
     page_break()
     add_header("../report_style/dbs/assets/header.png")
@@ -331,10 +345,11 @@ def generate_report(report_inputs):
         st.write("The top features that have negative correlation with their model output are `"
                  + "`, `".join(dict_feats["neg"]) + "`.")
 
-    fair = "fair" if np.mean(final_fairness["Fair?"] == "Yes") == 1 else "not fair"
-    st.write("**Fairness**: We consider the model to be fair if it is deemed to be fair for "
-             f"all metrics. From the table below, overall the model is considered **{fair}**.")
-    st.dataframe(final_fairness.style.applymap(color_red, subset=["Fair?"]))
+    if has_fai:
+        fair = "fair" if np.mean(final_fairness["Fair?"] == "Yes") == 1 else "not fair"
+        st.write("**Fairness**: We consider the model to be fair if it is deemed to be fair for "
+                 f"all metrics. From the table below, overall the model is considered **{fair}**.")
+        st.dataframe(final_fairness.style.applymap(color_red, subset=["Fair?"]))
 
     page_break()
     add_header("../report_style/dbs/assets/header.png")
@@ -348,11 +363,12 @@ def generate_report(report_inputs):
     indiv_xai_appendix(indiv_samples, indiv_shap_values, indiv_base_values,
                        config, is_multiclass)
 
-    st.header("Algorithmic Fairness")
-    alg_fai_appendix(valid_fai, unq_fai_classes, true_class, pred_class, config_fai, config)
+    if has_fai:
+        st.header("Algorithmic Fairness")
+        alg_fai_appendix(valid_fai, unq_fai_classes, true_class, pred_class, config_fai, config)
 
-    st.header("Notes")
-    st.write("**Equal opportunity**:")
-    st.latex(r"\frac{\text{FNR}(D=\text{unprivileged})}{\text{FNR}(D=\text{privileged})}")
-    st.write("**Predictive parity**:")
-    st.latex(r"\frac{\text{PPV}(D=\text{unprivileged})}{\text{PPV}(D=\text{privileged})}")
+        st.header("Notes")
+        st.write("**Equal opportunity**:")
+        st.latex(r"\frac{\text{FNR}(D=\text{unprivileged})}{\text{FNR}(D=\text{privileged})}")
+        st.write("**Predictive parity**:")
+        st.latex(r"\frac{\text{PPV}(D=\text{unprivileged})}{\text{PPV}(D=\text{privileged})}")
